@@ -3,6 +3,15 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+const playerImg = new Image();
+playerImg.src = 'assets/player.svg';
+
+const enemyImg = new Image();
+enemyImg.src = 'assets/enemy.svg';
+
+const bulletImg = new Image();
+bulletImg.src = 'assets/bullet.svg';
+
 window.addEventListener('resize', () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -26,6 +35,7 @@ let fireCooldown = 0;
 const bullets = [];
 const enemies = [];
 const enemyBullets = [];
+const explosions = [];
 
 function upgradeWeapon() {
   if (player.weaponLevel < 4) {
@@ -106,6 +116,16 @@ function updateEnemyBullets() {
   }
 }
 
+function updateExplosions() {
+  for (let i = explosions.length - 1; i >= 0; i--) {
+    const ex = explosions[i];
+    ex.timer++;
+    if (ex.timer > ex.duration) {
+      explosions.splice(i, 1);
+    }
+  }
+}
+
 function updateEnemies() {
   for (let i = enemies.length - 1; i >= 0; i--) {
     const e = enemies[i];
@@ -160,6 +180,7 @@ function updateEnemies() {
 
         if (player.weaponLevel >= 3) {
           const radius = 40;
+          explosions.push({ x: e.x, y: e.y, radius, timer: 0, duration: 20 });
           for (let k = enemies.length - 1; k >= 0; k--) {
             if (k === i) continue;
             const other = enemies[k];
@@ -233,35 +254,40 @@ function gameLoop() {
   updateBullets();
   updateEnemies();
   updateEnemyBullets();
+  updateExplosions();
 
   // Draw player
-  ctx.fillStyle = 'white';
-  ctx.beginPath();
-  ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.drawImage(
+    playerImg,
+    player.x - player.radius,
+    player.y - player.radius,
+    player.radius * 2,
+    player.radius * 2
+  );
 
   // Draw bullets
-  ctx.fillStyle = 'yellow';
   for (const b of bullets) {
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, 5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.drawImage(bulletImg, b.x - 5, b.y - 5, 10, 10);
   }
 
   // Draw enemy bullets
-  ctx.fillStyle = 'red';
   for (const b of enemyBullets) {
+    ctx.drawImage(bulletImg, b.x - 5, b.y - 5, 10, 10);
+  }
+
+  // Draw explosions
+  ctx.fillStyle = 'rgba(255,165,0,0.5)';
+  for (const ex of explosions) {
+    const alpha = 1 - ex.timer / ex.duration;
     ctx.beginPath();
-    ctx.arc(b.x, b.y, 5, 0, Math.PI * 2);
+    ctx.arc(ex.x, ex.y, ex.radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,165,0,${alpha})`;
     ctx.fill();
   }
 
   // Draw enemies
-  ctx.fillStyle = 'green';
   for (const e of enemies) {
-    ctx.beginPath();
-    ctx.arc(e.x, e.y, 15, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.drawImage(enemyImg, e.x - 15, e.y - 15, 30, 30);
   }
 
   requestAnimationFrame(gameLoop);

@@ -38,7 +38,7 @@ function upgradeWeapon() {
 
 function spawnPlayerBullets() {
   if (player.weaponLevel >= 4) {
-    const count = 8;
+    const count = 60;
     for (let i = 0; i < count; i++) {
       bullets.push({
         x: player.x,

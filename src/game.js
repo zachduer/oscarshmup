@@ -4,13 +4,13 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 const playerImg = new Image();
-playerImg.src = 'assets/player.png';
+playerImg.src = 'assets/player.svg';
 
 const enemyImg = new Image();
-enemyImg.src = 'assets/enemy.png';
+enemyImg.src = 'assets/enemy.svg';
 
 const bulletImg = new Image();
-bulletImg.src = 'assets/bullet.png';
+bulletImg.src = 'assets/bullet.svg';
 
 window.addEventListener('resize', () => {
   canvas.width = window.innerWidth;

@@ -14,11 +14,55 @@ const player = {
   radius: 20,
   health: 100,
   score: 0,
+  kills: 0,
+  weaponLevel: 0,
 };
+
+let isFiring = false;
+let baseFireRate = 20;
+let fireRate = baseFireRate;
+let fireCooldown = 0;
 
 const bullets = [];
 const enemies = [];
 const enemyBullets = [];
+
+function upgradeWeapon() {
+  if (player.weaponLevel < 4) {
+    player.weaponLevel++;
+    if (player.weaponLevel >= 1) {
+      fireRate = 10; // faster firing after first kill
+    }
+  }
+}
+
+function spawnPlayerBullets() {
+  if (player.weaponLevel >= 4) {
+    const count = 8;
+    for (let i = 0; i < count; i++) {
+      bullets.push({
+        x: player.x,
+        y: player.y,
+        angle: (Math.PI * 2 * i) / count,
+      });
+    }
+  } else {
+    bullets.push({ x: player.x, y: player.y, angle: mouseAngle });
+    if (player.weaponLevel >= 2) {
+      const spread = (5 * Math.PI) / 180;
+      bullets.push({ x: player.x, y: player.y, angle: mouseAngle + spread });
+      bullets.push({ x: player.x, y: player.y, angle: mouseAngle - spread });
+    }
+  }
+}
+
+function killEnemy(index) {
+  enemies.splice(index, 1);
+  player.score += 100;
+  player.kills++;
+  upgradeWeapon();
+  updateHud();
+}
 
 function spawnEnemy() {
   const types = ['basic', 'shooter', 'fast', 'spiral'];
@@ -113,11 +157,25 @@ function updateEnemies() {
       const b = bullets[j];
       if (Math.hypot(e.x - b.x, e.y - b.y) < 15) {
         bullets.splice(j, 1);
+
+        if (player.weaponLevel >= 3) {
+          const radius = 40;
+          for (let k = enemies.length - 1; k >= 0; k--) {
+            if (k === i) continue;
+            const other = enemies[k];
+            if (Math.hypot(other.x - e.x, other.y - e.y) < radius) {
+              other.hp--;
+              if (other.hp <= 0) {
+                killEnemy(k);
+                if (k < i) i--;
+              }
+            }
+          }
+        }
+
         e.hp--;
         if (e.hp <= 0) {
-          enemies.splice(i, 1);
-          player.score += 100;
-          updateHud();
+          killEnemy(i);
         }
         break;
       }
@@ -151,13 +209,26 @@ canvas.addEventListener('mousemove', (e) => {
   mouseAngle = Math.atan2(my - player.y, mx - player.x);
 });
 
-canvas.addEventListener('click', () => {
-  bullets.push({ x: player.x, y: player.y, angle: mouseAngle });
+canvas.addEventListener('mousedown', () => {
+  isFiring = true;
+});
+window.addEventListener('mouseup', () => {
+  isFiring = false;
 });
 
 setInterval(spawnEnemy, 1000);
 function gameLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (isFiring) {
+    fireCooldown--;
+    if (fireCooldown <= 0) {
+      spawnPlayerBullets();
+      fireCooldown = fireRate;
+    }
+  } else if (fireCooldown > 0) {
+    fireCooldown--;
+  }
 
   updateBullets();
   updateEnemies();

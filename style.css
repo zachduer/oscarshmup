@@ -1,14 +1,14 @@
 body {
   margin: 0;
   overflow: hidden;
-  background: #000;
+  background: url('assets/background.png') center/cover no-repeat #000;
   color: white;
   font-family: sans-serif;
 }
 
 #gameCanvas {
   display: block;
-  background: #111;
+  background: transparent;
 }
 
 #hud {
